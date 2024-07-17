@@ -35,15 +35,14 @@ func clearConsole() {
 
 func main() {
 	clearConsole()
-	
+
 	var opts Options
 
 	rootCmd := &cobra.Command{
-		Use:   "video-organizer",
+		Use:   "Organizes video files in a directory based on their duration",
 		Short: "A CLI tool to organize videos based on their duration",
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := video.OrganizeVideos(opts.RootDirectoryPath); err != nil {
-				// log.Fatalf("Error organizing videos: %v", err)
 				pterm.Error.Printf("Error organizing videos: %v\n", err)
 			}
 		},
@@ -57,4 +56,3 @@ func main() {
 		os.Exit(1)
 	}
 }
- 
