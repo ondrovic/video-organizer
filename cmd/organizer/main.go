@@ -39,8 +39,8 @@ func main() {
 	var opts Options
 
 	rootCmd := &cobra.Command{
-		Use:   "Organizes video files in a directory based on their duration",
-		Short: "A CLI tool to organize videos based on their duration",
+		Use:   "video-sorter",
+		Short: "A CLI tool that organizes video files in a directory based on their duration",
 		Run: func(cmd *cobra.Command, args []string) {
 			if err := video.OrganizeVideos(opts.RootDirectoryPath); err != nil {
 				pterm.Error.Printf("Error organizing videos: %v\n", err)
