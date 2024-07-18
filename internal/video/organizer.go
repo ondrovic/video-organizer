@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/pterm/pterm"
 	"github.com/xfrr/goffmpeg/transcoder"
@@ -18,14 +19,14 @@ type FolderInfo struct {
 }
 
 var folderStructure = []FolderInfo{
-	{Name: "Micro", MaxDuration: 15},                       // 0 <= duration <= 15 seconds
-	{Name: "Mini", MaxDuration: 60},                        // 15 < duration <= 60 seconds
-	{Name: "Short", MaxDuration: 5 * 60},                   // 60 < duration <= 5*60 seconds (5 minutes)
-	{Name: "Medium", MaxDuration: 15 * 60},                 // 560 < duration <= 1560 seconds (15 minutes)
-	{Name: "Long", MaxDuration: 30 * 60},                   // 1560 < duration <= 3060 seconds (30 minutes)
-	{Name: "Extended", MaxDuration: 60 * 60},               // 3060 < duration <= 6060 seconds (60 minutes)
-	{Name: "Feature", MaxDuration: 120 * 60},               // 6060 < duration <= 12060 seconds (120 minutes)
-	{Name: "Epic", MaxDuration: float64(^uint(0) >> 1)},    // > 120*60 seconds
+	{Name: "Micro", MaxDuration: 15},                    // 0 <= duration <= 15 seconds
+	{Name: "Mini", MaxDuration: 60},                     // 15 < duration <= 60 seconds
+	{Name: "Short", MaxDuration: 5 * 60},                // 60 < duration <= 5*60 seconds (5 minutes)
+	{Name: "Medium", MaxDuration: 15 * 60},              // 560 < duration <= 1560 seconds (15 minutes)
+	{Name: "Long", MaxDuration: 30 * 60},                // 1560 < duration <= 3060 seconds (30 minutes)
+	{Name: "Extended", MaxDuration: 60 * 60},            // 3060 < duration <= 6060 seconds (60 minutes)
+	{Name: "Feature", MaxDuration: 120 * 60},            // 6060 < duration <= 12060 seconds (120 minutes)
+	{Name: "Epic", MaxDuration: float64(^uint(0) >> 1)}, // > 120*60 seconds
 }
 
 func getDurationInSeconds(filePath string) (float64, error) {
@@ -98,7 +99,10 @@ func OrganizeVideos(rootDirectory string) error {
 
 			duration, err := getDurationInSeconds(filePath)
 			if err != nil {
-				return err
+				// Log the error and continue with the next file
+				fmt.Printf("Error getting duration for %s: %v\n", filePath, err)
+				progressbar.Increment()
+				continue
 			}
 
 			targetFolder := getTargetFolder(duration)
@@ -107,11 +111,21 @@ func OrganizeVideos(rootDirectory string) error {
 			targetPath := filepath.Join(filepath.Dir(filePath), targetFolder, filepath.Base(filePath))
 
 			if err := os.MkdirAll(filepath.Dir(targetPath), 0755); err != nil {
-				return err
+				// Log the error and continue with the next file
+				fmt.Printf("Error creating directory for %s: %v\n", targetPath, err)
+				progressbar.Increment()
+				continue
 			}
 
 			if err := os.Rename(filePath, targetPath); err != nil {
-				return err
+				// Check if the error is due to the file being in use
+				if os.IsPermission(err) || strings.Contains(err.Error(), "being used by another process") {
+					fmt.Printf("Skipping file in use: %s\n", filePath)
+				} else {
+					fmt.Printf("Error renaming %s to %s: %v\n", filePath, targetPath, err)
+				}
+				progressbar.Increment()
+				continue
 			}
 
 			progressbar.Increment()
