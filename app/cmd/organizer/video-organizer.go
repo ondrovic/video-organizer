@@ -22,7 +22,7 @@ func main() {
 	var opts Options
 
 	rootCmd := &cobra.Command{
-		Use:   "video-sorter [root-directory]",
+		Use:   "video-organizer [root-directory]",
 		Short: "A CLI tool that organizes video files in a directory based on their duration",
 		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
