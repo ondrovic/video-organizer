@@ -6,37 +6,29 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 	"sync"
 	"sync/atomic"
 
 	"github.com/pterm/pterm"
+
+	commonTypes "github.com/ondrovic/common/types"
+	commonUtils "github.com/ondrovic/common/utils"
 )
 
-var validExtensions = []string{".mp4", ".avi", ".mov", ".mkv", ".ts", "mov", ".m4v", ".wmv", ".flv", ".webm", ".mpg", ".mpeg"}
-
-func isValidVideoFile(filename string) bool {
-	ext := strings.ToLower(filepath.Ext(filename))
-	for _, validExt := range validExtensions {
-		if ext == validExt {
-			return true
-		}
+func formatSkippedFilesMessage(skippedFiles int64) (string, error) {
+	fileMsg, err := commonUtils.Pluralize(skippedFiles, "file", "files")
+	if err != nil {
+		return "", err
 	}
-	return false
-}
 
-func pluralize(count int64, singular string, plural string) string {
-	if count == 1 {
-		return singular
+	actionMsg, err := commonUtils.Pluralize(skippedFiles, "was", "were")
+	if err != nil {
+		return "", err
 	}
-	return plural
-}
-
-func formatSkippedFilesMessage(skippedFiles int64) string {
 	return fmt.Sprintf("\t\tskipped %v %s that %s already in target directories",
 		skippedFiles,
-		pluralize(skippedFiles, "file", "files"),
-		pluralize(skippedFiles, "was", "were"))
+		fileMsg,
+		actionMsg), nil
 }
 
 func getVideoFiles(rootDirectory string) (map[string][]string, error) {
@@ -51,12 +43,12 @@ func getVideoFiles(rootDirectory string) (map[string][]string, error) {
 	var totalFiles int64
 	var skippedFiles int64
 
-	err := filepath.Walk(rootDirectory, func(path string, info os.FileInfo, err error) error {
+	err := walkDir(rootDirectory, func(path string, info os.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
 
-		if !info.IsDir() && isValidVideoFile(info.Name()) {
+		if !info.IsDir() && commonUtils.IsExtensionValid(commonTypes.FileTypes.Video, info.Name()) {
 			relPath, err := filepath.Rel(rootDirectory, filepath.Dir(path))
 			if err != nil {
 				pterm.Error.Printf("Error getting relPath: %v\n", err)
@@ -89,9 +81,35 @@ func getVideoFiles(rootDirectory string) (map[string][]string, error) {
 	spinner.Success(fmt.Sprintf("%v scan completed!", rootDirectory))
 
 	if skippedFiles > 0 {
-		pterm.Info.Println(formatSkippedFilesMessage(skippedFiles))
+		skippedMsg, err := formatSkippedFilesMessage(skippedFiles)
+		if err != nil {
+			pterm.Error.Println(err)
+			return nil, err
+		}
+		pterm.Info.Println(skippedMsg)
 	}
-
 	pterm.Success.Printf("Found %v video files in %v\n", totalFiles, rootDirectory)
 	return videoFiles, err
+}
+
+func walkDir(dir string, fn func(path string, info os.DirEntry, err error) error) error {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		path := filepath.Join(dir, entry.Name())
+		if entry.IsDir() {
+			if err := walkDir(path, fn); err != nil {
+				return err
+			}
+		} else {
+			if err := fn(path, entry, nil); err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
 }

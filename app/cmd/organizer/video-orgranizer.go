@@ -1,56 +1,37 @@
-// cmd/organizer/main.go
+// app/cmd/organizer/video-organizer.go
 package main
 
 import (
-	"fmt"
 	"os"
-	"os/exec"
 	"runtime"
 	"video-organizer/internal/video"
 
 	"github.com/pterm/pterm"
 	"github.com/spf13/cobra"
+
+	commonUtils "github.com/ondrovic/common/utils"
 )
 
 type Options struct {
 	RootDirectoryPath string
 }
 
-func clearConsole() {
-	var clearCmd *exec.Cmd
-
-	switch runtime.GOOS {
-	case "linux", "darwin":
-		clearCmd = exec.Command("clear")
-	case "windows":
-		clearCmd = exec.Command("cmd", "/c", "cls")
-	default:
-		fmt.Println("Unsupported platform")
-		return
-	}
-
-	clearCmd.Stdout = os.Stdout
-	clearCmd.Run()
-}
-
 func main() {
-	clearConsole()
+	commonUtils.ClearTerminalScreen(runtime.GOOS)
 
 	var opts Options
 
 	rootCmd := &cobra.Command{
-		Use:   "video-sorter",
+		Use:   "video-sorter [root-directory]",
 		Short: "A CLI tool that organizes video files in a directory based on their duration",
+		Args:  cobra.MinimumNArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
+			opts.RootDirectoryPath = args[0]
 			if err := video.OrganizeVideos(opts.RootDirectoryPath); err != nil {
 				pterm.Error.Printf("Error organizing videos: %v\n", err)
 			}
 		},
 	}
-
-	flags := rootCmd.Flags()
-	flags.StringVarP(&opts.RootDirectoryPath, "root-directory", "r", "", "Root directory you want to organize")
-	rootCmd.MarkFlagRequired("root-directory")
 
 	if err := rootCmd.Execute(); err != nil {
 		os.Exit(1)
