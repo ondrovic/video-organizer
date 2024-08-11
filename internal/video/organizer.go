@@ -87,7 +87,7 @@ func OrganizeVideos(rootDirectory string) error {
 		totalFiles += len(files)
 	}
 
-	progressbar, _ := pterm.DefaultProgressbar.WithTotal(totalFiles).WithTitle("Organizing videos").Start()
+	progressbar, _ := pterm.DefaultProgressbar.WithTotal(totalFiles).WithTitle("Organizing videos").WithRemoveWhenDone(true).Start()
 
 	for subDir, files := range videoFiles {
 		for _, filePath := range files {
