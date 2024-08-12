@@ -1,3 +1,4 @@
+[![CodeFactor](https://www.codefactor.io/repository/github/ondrovic/video-organizer/badge)](https://www.codefactor.io/repository/github/ondrovic/video-organizer)
 # go-video-organizer
 Cli tool to organize videos files based on duration
 
