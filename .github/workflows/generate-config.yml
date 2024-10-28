@@ -11,7 +11,7 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write  # Required for creating PRs
+  pull-requests: write  # To allow creating PRs
 
 jobs:
   check-config:
@@ -31,6 +31,7 @@ jobs:
           else
             echo "Config not generated yet"
             echo "skip=false" >> $GITHUB_OUTPUT
+          fi  # Ensure the 'fi' matches the 'if'
 
   generate-config:
     needs: check-config
@@ -51,7 +52,7 @@ jobs:
       - name: Run generate_config.sh
         run: |
           chmod +x .github/scripts/generate_config.sh
-          .github/scripts/generate_config.sh ${{ github.event.inputs.repository-name || github.repository }}
+          .github/scripts/generate_config.sh "${{ github.event.inputs.repository-name || github.repository }}"
 
       - name: Create new branch with changes
         run: |
