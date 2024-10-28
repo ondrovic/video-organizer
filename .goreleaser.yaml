@@ -1,10 +1,9 @@
 version: 2
 
-project_name: PLACEHOLDER # rename
+project_name: video-organizer
 
 env:
- - GO_MAIN_PATH=PLACEHOLDER # setup to your main path
-
+  - GO_MAIN_PATH=video-organizer.go
 
 before:
   hooks:
@@ -15,7 +14,7 @@ before:
 
 builds:
   - id: windows
-    main: '{{ .Env.GO_MAIN_PATH }}'
+    main: "{{ .Env.GO_MAIN_PATH }}"
     env:
       - CGO_ENABLED=0
     goos:
@@ -31,7 +30,7 @@ builds:
       - -X go.szostok.io/version.dirtyBuild={{.IsGitDirty}}
 
   - id: linux
-    main: '{{ .Env.GO_MAIN_PATH }}'
+    main: "{{ .Env.GO_MAIN_PATH }}"
     env:
       - CGO_ENABLED=0
     goos:
@@ -47,7 +46,7 @@ builds:
       - -X go.szostok.io/version.dirtyBuild={{.IsGitDirty}}
 
   - id: macos
-    main: '{{ .Env.GO_MAIN_PATH }}'
+    main: "{{ .Env.GO_MAIN_PATH }}"
     env:
       - CGO_ENABLED=0
     goos:
