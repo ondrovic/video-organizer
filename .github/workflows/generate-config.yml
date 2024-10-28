@@ -11,7 +11,6 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write  # To allow creating PRs
 
 jobs:
   check-config:
@@ -19,19 +18,18 @@ jobs:
     outputs:
       skip: ${{ steps.check.outputs.skip }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-      
-      - name: Check if config has been generated
-        id: check
-        run: |
-          if [ -f ".github/ISSUE_TEMPLATE/issue_template_configured.txt" ]; then
-            echo "Config already generated"
-            echo "skip=true" >> $GITHUB_OUTPUT
-          else
-            echo "Config not generated yet"
-            echo "skip=false" >> $GITHUB_OUTPUT
-          fi  # Ensure the 'fi' matches the 'if'
+    - name: Checkout repository
+      uses: actions/checkout@v4
+    - name: Check if config has been generated
+      id: check
+      run: |
+        if [ -f ".github/ISSUE_TEMPLATE/issue_template_configured.txt" ]; then
+          echo "Config already generated"
+          echo "skip=true" >> $GITHUB_OUTPUT
+        else
+          echo "Config not generated yet"
+          echo "skip=false" >> $GITHUB_OUTPUT
+        fi
 
   generate-config:
     needs: check-config
@@ -39,34 +37,24 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+      
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Set up Git
-        run: |
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-
-      - name: Run generate_config.sh
-        run: |
-          chmod +x .github/scripts/generate_config.sh
-          .github/scripts/generate_config.sh "${{ github.event.inputs.repository-name || github.repository }}"
-
-      - name: Create new branch with changes
-        run: |
-          git checkout -b config-update-branch
-          git add .github/ISSUE_TEMPLATE/config.yml
-          git add .github/ISSUE_TEMPLATE/issue_template_configured.txt
-          git commit -m "Update generated config.yml and issue_template_configured.txt"
-          git push origin config-update-branch
-
-      - name: Create a Pull Request
-        uses: peter-evans/create-pull-request@v5
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          branch: config-update-branch
-          base: master
-          title: "Update generated config"
-          body: "This PR updates the generated config.yml and issue_template_configured.txt."
+    - name: Set up Git
+      run: |
+        git config --global user.name 'GitHub Actions'
+        git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+    
+    - name: Run generate_config.sh
+      run: |
+        chmod +x .github/scripts/generate_config.sh
+        .github/scripts/generate_config.sh ${{ github.event.inputs.repository-name || github.repository }}
+    
+    - name: Commit and push generated config
+      run: |
+        git add .github/ISSUE_TEMPLATE/config.yml
+        git add .github/ISSUE_TEMPLATE/issue_template_configured.txt
+        git commit -m "Update generated config.yml and issue_template_configured.txt"
+        git push
