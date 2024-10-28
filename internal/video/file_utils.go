@@ -12,16 +12,17 @@ import (
 	"github.com/pterm/pterm"
 
 	commonTypes "github.com/ondrovic/common/types"
-	commonUtils "github.com/ondrovic/common/utils"
+	cUtils "github.com/ondrovic/common/utils"
+	cFormatter "github.com/ondrovic/common/utils/formatters"
 )
 
 func formatSkippedFilesMessage(skippedFiles int64) (string, error) {
-	fileMsg, err := commonUtils.Pluralize(skippedFiles, "file", "files")
+	fileMsg, err := cFormatter.Pluralize(skippedFiles, "file", "files")
 	if err != nil {
 		return "", err
 	}
 
-	actionMsg, err := commonUtils.Pluralize(skippedFiles, "was", "were")
+	actionMsg, err := cFormatter.Pluralize(skippedFiles, "was", "were")
 	if err != nil {
 		return "", err
 	}
@@ -48,7 +49,7 @@ func getVideoFiles(rootDirectory string) (map[string][]string, error) {
 			return err
 		}
 
-		if !info.IsDir() && commonUtils.IsExtensionValid(commonTypes.FileTypes.Video, info.Name()) {
+		if !info.IsDir() && cUtils.IsExtensionValid(commonTypes.FileTypes.Video, info.Name()) {
 			relPath, err := filepath.Rel(rootDirectory, filepath.Dir(path))
 			if err != nil {
 				pterm.Error.Printf("Error getting relPath: %v\n", err)
@@ -112,4 +113,15 @@ func walkDir(dir string, fn func(path string, info os.DirEntry, err error) error
 	}
 
 	return nil
+}
+
+func FormatDirectory(directory string) string {
+	// Expand '~' to home directory for Linux/macOS
+	if runtime.GOOS != "windows" && directory[:1] == "~" {
+		if home, err := os.UserHomeDir(); err == nil {
+			directory = filepath.Join(home, directory[1:])
+		}
+	}
+	// Ensure path is clean and uses the appropriate separators
+	return filepath.Clean(directory)
 }
