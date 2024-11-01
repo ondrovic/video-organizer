@@ -22,14 +22,7 @@ func formatSkippedFilesMessage(skippedFiles int64) (string, error) {
 		return "", err
 	}
 
-	actionMsg, err := cFormatter.Pluralize(skippedFiles, "was", "were")
-	if err != nil {
-		return "", err
-	}
-	return fmt.Sprintf("\t\tskipped %v %s that %s already in target directories",
-		skippedFiles,
-		fileMsg,
-		actionMsg), nil
+	return fmt.Sprintf("\t\tskipped %v %s", skippedFiles, fileMsg), nil
 }
 
 func getVideoFiles(rootDirectory string) (map[string][]string, error) {
@@ -111,7 +104,6 @@ func walkDir(dir string, fn func(path string, info os.DirEntry, err error) error
 			}
 		}
 	}
-
 	return nil
 }
 
