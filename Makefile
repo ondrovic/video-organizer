@@ -1,7 +1,7 @@
 export GO111MODULE=on
 GOOS := $(shell go env GOOS)
 # update to main app path
-APP_PATH := PLACEHOLDER
+APP_PATH := video-organizer.go
 
 # determins the variables based on GOOS 
 ifeq ($(GOOS), windows)
